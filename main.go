@@ -17,7 +17,6 @@ import (
 	_ "github.com/glebarez/sqlite"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/lpar/gzipped/v2"
 	"github.com/muety/wakapi/utils"
 	httpSwagger "github.com/swaggo/http-swagger"
 	_ "gorm.io/driver/mysql"
@@ -113,8 +112,8 @@ var (
 // @name Authorization
 
 func main() {
-	var versionFlag = flag.Bool("version", false, "print version")
-	var configFlag = flag.String("config", conf.DefaultConfigPath, "config file location")
+	versionFlag := flag.Bool("version", false, "print version")
+	configFlag := flag.String("config", conf.DefaultConfigPath, "config file location")
 	flag.Parse()
 
 	if *versionFlag {
@@ -321,9 +320,6 @@ func main() {
 
 	assetsStaticFs := fsutils.NewExistsHttpFS(fsutils.NewExistsFS(static).WithCache(!config.IsDev()))
 	assetsFileServer := http.FileServer(assetsStaticFs)
-	if !config.IsDev() {
-		assetsFileServer = gzipped.FileServer(assetsStaticFs)
-	}
 	staticFileServer := http.FileServer(http.FS(fsutils.NeuteredFileSystem{FS: static}))
 
 	router.Get("/contribute.json", staticFileServer.ServeHTTP)
