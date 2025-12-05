@@ -8,11 +8,11 @@
 ## 🎯 Architecture Decisions
 
 ### Database Layer
-- **REMOVE:** GORM ORM
+- **UPDATED DECISION:** Keep GORM for now (pragmatic approach)
 - **REMOVE:** SQLite, MySQL, MariaDB support
-- **KEEP:** Postgres only
-- **USE:** `sqlc` (generates type-safe Go from SQL) + `pgx` driver
-- **Rationale:** Leaner, more control, type-safe, better performance
+- **KEEP:** Postgres only with GORM
+- **RATIONALE:** Ship faster, reduce risk, migrate to sqlc later if needed
+- **FUTURE:** Consider `sqlc` migration after product validation
 
 ### Web Framework
 - **REMOVE:** Custom routing middleware stack
@@ -198,6 +198,124 @@
 ### Risk 3: Breaking WakaTime Compatibility
 - **Mitigation:** Test with actual WakaTime clients
 - **Mitigation:** Keep API compatibility layer intact
+
+---
+
+## 🧪 Test Coverage Analysis (Portfolio Bloat Detected)
+
+### What Tests Exist (Current State)
+- **25 test files** (~4,500 lines of test code)
+- **Mocked dependencies** (16 mock files for services/repositories)
+- **Bruno API tests** (end-to-end integration tests) ❌ **PORTFOLIO BLOAT - TO BE REMOVED**
+
+### Test Distribution (Current)
+| Layer | Code Lines | Test Lines | Coverage Strategy | Quality |
+|-------|-----------|------------|-------------------|---------|
+| **Routes** | ~3,500 | ~1,500 | ✅ Well tested (HTTP handlers) | Good |
+| **Services** | ~4,500 | ~2,000 | ✅ Well tested (business logic) | Good |
+| **Repositories** | ~2,800 | **0** | ❌ **ZERO TESTS** | **CRITICAL GAP** |
+| **Models** | ~2,000 | ~1,000 | ✅ Decent coverage | Good |
+| **E2E (Bruno)** | N/A | External | ❌ Slow, flaky, external tool | **DELETE** |
+
+### The Portfolio Bloat Pattern
+
+**What the author prioritized:**
+1. ✅ **Routes** - Visible in code reviews, shows HTTP expertise
+2. ✅ **Services** - Shows business logic skills
+3. ✅ **Mocks** - Shows "enterprise" patterns knowledge
+4. ✅ **Badge generation tests** (159 lines!) - Visible feature
+5. ✅ **Authentication middleware** (389 lines!) - Security credibility
+6. ✅ **Bruno E2E tests** - "Look, I do end-to-end testing with trendy tools!"
+
+**What the author skipped:**
+1. ❌ **Repository tests** - "Boring" CRUD, not impressive
+2. ❌ **Database edge cases** - Less visible in portfolio
+3. ❌ **Real integration tests** - Time-consuming, not flashy
+
+### The Problem with Bruno Tests
+
+**Bruno = More Portfolio Bloat:**
+- External Node.js dependency for Go project
+- Slow (spin up server, DB, HTTP overhead)
+- Flaky (network timing, port conflicts)
+- Hard to debug (which layer broke?)
+- Brittle (API format changes break 50+ tests)
+- Framework tourism (trendy tool, not best tool)
+
+**Classic inverted test pyramid:**
+```
+    Wrong (Current)              Right (Target)
+/--------------\                      /\
+\   Bruno E2E  /                     /E2E\
+ \    Tests   /                     /------\
+  \----------/                     /  API   \
+   \  Unit  /                     /----------\
+    \------/                     / Unit+Integ \
+     \Repo/                     /--------------\
+      \  /
+       \/
+```
+
+### OxyWaka Testing Strategy (NEW APPROACH)
+
+**DECISION:** Remove Bruno entirely, build proper test suite
+
+#### Phase 1: Repository Tests (~2 days)
+- **Tool:** Docker testcontainers (Postgres)
+- **Coverage:** All repository CRUD operations
+- **Focus:**
+  - User repository (CRUD, queries, edge cases)
+  - Heartbeat repository (insert, bulk queries, pagination)
+  - Summary repository (aggregations, time ranges)
+  - API key repository (validation, lookups)
+- **Benefit:** Fast, reliable, easy to debug
+
+#### Phase 2: Service Integration Tests (~2 days)
+- **Approach:** Service + Real DB (no mocks for repos)
+- **Mock:** Only external dependencies (email, HTTP clients)
+- **Coverage:**
+  - User service (signup, auth, settings)
+  - Heartbeat service (ingestion, validation, deduplication)
+  - Summary service (generation, aggregation, caching)
+- **Benefit:** Test real interactions, catch integration bugs
+
+#### Phase 3: Critical API Tests (~1 day)
+- **Tool:** Go `httptest` (stdlib, no external tools)
+- **Coverage:** ~10-15 critical endpoints
+  - Authentication (login, API key, session)
+  - Heartbeat ingestion (POST /api/heartbeat)
+  - Summary retrieval (GET /api/summary)
+- **Benefit:** No HTTP overhead, fast, reliable
+
+#### Phase 4: Delete Bruno (~5 minutes)
+- Remove `testing/wakapi_api_tests/`
+- Remove `testing/run_api_tests.sh`
+- Remove `testing/run_mail_tests.sh`
+- Remove `testing/compose.yml` (if only used for Bruno)
+- Remove Bruno CLI dependency docs from README
+
+### Expected Outcomes
+
+**Time Investment:** ~5 days
+**Long-term Benefits:**
+- ⚡ 10x faster test suite
+- 🎯 True confidence (test what matters)
+- 🔧 Easy refactoring (stable tests)
+- 🧹 Zero external dependencies
+- 📊 Clear test failures (know exactly what broke)
+
+### Testing Tools & Libraries
+
+**Use:**
+- ✅ `testcontainers-go` - Real Postgres in Docker for tests
+- ✅ `testify/assert` - Already used, keep it
+- ✅ `httptest` - Stdlib HTTP testing
+- ✅ `testify/suite` - Test setup/teardown
+
+**Remove/Avoid:**
+- ❌ Bruno CLI (external Node.js tool)
+- ❌ Excessive mocks (prefer real DB in tests)
+- ❌ `testify/mock` where not needed
 
 ---
 
