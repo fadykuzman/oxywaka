@@ -26,7 +26,7 @@ func SetupTestDB(t *testing.T) *gorm.DB {
 		testcontainers.WithWaitStrategy(
 			wait.ForLog("database system is ready to accept connections").
 				WithOccurrence(2).
-				WithStartupTimeout(5*time.Second)),
+				WithStartupTimeout(10*time.Second)),
 	)
 	if err != nil {
 		t.Fatalf("failed to start postgres container: %s", err)
