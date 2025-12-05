@@ -1,3 +1,4 @@
+// Package repositories defines interfaces for various data repositories used in the application.
 package repositories
 
 import (
