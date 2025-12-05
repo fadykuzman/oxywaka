@@ -54,3 +54,8 @@ func SetupTestDB(t *testing.T) *gorm.DB {
 
 	return db
 }
+
+func NewTestUserRepository(t *testing.T) UserRepository {
+	db := SetupTestDB(t)
+	return NewGormUserRepository(db)
+}
