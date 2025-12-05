@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"errors"
+
 	"github.com/muety/wakapi/models"
 	"gorm.io/gorm"
 )
@@ -22,27 +23,27 @@ func (r *AliasRepository) GetAll() ([]*models.Alias, error) {
 	return aliases, nil
 }
 
-func (r *AliasRepository) GetByUser(userId string) ([]*models.Alias, error) {
+func (r *AliasRepository) GetByUser(userID string) ([]*models.Alias, error) {
 	var aliases []*models.Alias
-	if userId == "" {
+	if userID == "" {
 		return aliases, nil
 	}
 	if err := r.db.
-		Where(&models.Alias{UserID: userId}).
+		Where(&models.Alias{UserID: userID}).
 		Find(&aliases).Error; err != nil {
 		return nil, err
 	}
 	return aliases, nil
 }
 
-func (r *AliasRepository) GetByUserAndKey(userId, key string) ([]*models.Alias, error) {
+func (r *AliasRepository) GetByUserAndKey(userID, key string) ([]*models.Alias, error) {
 	var aliases []*models.Alias
-	if userId == "" {
+	if userID == "" {
 		return aliases, nil
 	}
 	if err := r.db.
 		Where(&models.Alias{
-			UserID: userId,
+			UserID: userID,
 			Key:    key,
 		}).
 		Find(&aliases).Error; err != nil {
@@ -51,14 +52,14 @@ func (r *AliasRepository) GetByUserAndKey(userId, key string) ([]*models.Alias, 
 	return aliases, nil
 }
 
-func (r *AliasRepository) GetByUserAndKeyAndType(userId, key string, summaryType uint8) ([]*models.Alias, error) {
+func (r *AliasRepository) GetByUserAndKeyAndType(userID, key string, summaryType uint8) ([]*models.Alias, error) {
 	var aliases []*models.Alias
-	if userId == "" {
+	if userID == "" {
 		return aliases, nil
 	}
 	if err := r.db.
 		Where(&models.Alias{
-			UserID: userId,
+			UserID: userID,
 			Key:    key,
 			Type:   summaryType,
 		}).
@@ -68,14 +69,14 @@ func (r *AliasRepository) GetByUserAndKeyAndType(userId, key string, summaryType
 	return aliases, nil
 }
 
-func (r *AliasRepository) GetByUserAndTypeAndValue(userId string, summaryType uint8, value string) (*models.Alias, error) {
+func (r *AliasRepository) GetByUserAndTypeAndValue(userID string, summaryType uint8, value string) (*models.Alias, error) {
 	alias := &models.Alias{}
-	if userId == "" {
+	if userID == "" {
 		return nil, errors.New("invalid input")
 	}
 	if err := r.db.
 		Where(&models.Alias{
-			UserID: userId,
+			UserID: userID,
 			Type:   summaryType,
 			Value:  value,
 		}).
