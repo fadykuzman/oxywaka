@@ -164,7 +164,7 @@ func main() {
 	// Repositories
 	aliasRepository = repositories.NewAliasRepository(db)
 	heartbeatRepository = repositories.NewHeartbeatRepository(db)
-	userRepository = repositories.NewUserRepository(db)
+	userRepository = repositories.NewGormUserRepository(db)
 	languageMappingRepository = repositories.NewLanguageMappingRepository(db)
 	projectLabelRepository = repositories.NewProjectLabelRepository(db)
 	summaryRepository = repositories.NewSummaryRepository(db)
