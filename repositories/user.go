@@ -23,6 +23,9 @@ func NewGormUserRepository(db *gorm.DB) *GormUserRepository {
 func (r *GormUserRepository) FindOne(attributes models.User) (*models.User, error) {
 	u := &models.User{}
 	if err := r.db.Where(&attributes).First(u).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrNotFound
+		}
 		return u, err
 	}
 	return u, nil
@@ -113,6 +116,7 @@ func (r *GormUserRepository) Count() (int64, error) {
 	return count, nil
 }
 
+// TODO This method violates single responsibility principle and should be split into Insert and Get mehtods
 func (r *GormUserRepository) InsertOrGet(user *models.User) (*models.User, bool, error) {
 	if u, err := r.FindOne(models.User{ID: user.ID}); err == nil && u != nil && u.ID != "" {
 		return u, false, nil

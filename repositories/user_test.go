@@ -3,6 +3,7 @@ package repositories
 import (
 	"testing"
 
+	"github.com/muety/wakapi/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,19 +16,11 @@ func TestUserRepository_Count(t *testing.T) {
 	assert.Equal(t, int64(0), count, "empty database should have 0 users")
 }
 
-// func TestUserRepository_InsertOrGet_NewUser(t *testing.T) {
-// 	repo := NewTestUserRepository(t)
-//
-// 	user := &models.User{
-// 		ID:       "testuser",
-// 		Email:    "test@example.com",
-// 		Password: "hashedpassword",
-// 	}
-//
-// 	result, created, err := repo.InsertOrGet(user)
-//
-// 	assert.NoError(t, err)
-// 	assert.True(t, created, "user should be created")
-// 	assert.Equal(t, "testuser", result.ID)
-// 	assert.Equal(t, "test@example.com", result.Email)
-// }
+func TestUserRepository_FindOne_NonExistent(t *testing.T) {
+	repo := NewTestUserRepository(t)
+
+	_, err := repo.FindOne(models.User{ID: "nonexistent"})
+
+	assert.Error(t, err, "should return error for non-existent user")
+	assert.ErrorIs(t, err, ErrNotFound)
+}
