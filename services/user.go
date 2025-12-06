@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"strings"
 	"sync/atomic"
 	"time"
 
@@ -266,10 +265,6 @@ func (srv *UserService) Update(user *models.User) (*models.User, error) {
 }
 
 func (srv *UserService) ChangeUserId(user *models.User, newUserId string) (*models.User, error) {
-	if !srv.checkUpdateCascade() {
-		return nil, errors.New("sqlite database too old to perform user id change consistently")
-	}
-
 	// https://github.com/muety/wakapi/issues/739
 	oldUserId := user.ID
 	defer srv.FlushUserCache(oldUserId)
@@ -370,12 +365,4 @@ func (srv *UserService) notifyDelete(user *models.User) {
 		Name:   config.EventUserDelete,
 		Fields: map[string]interface{}{config.FieldPayload: user},
 	})
-}
-
-func (srv *UserService) checkUpdateCascade() bool {
-	if dialector := srv.repository.GetDialector(); dialector == "sqlite" || dialector == "sqlite3" {
-		ddl, _ := srv.repository.GetTableDDLSqlite("heartbeats")
-		return strings.Contains(ddl, "ON UPDATE CASCADE")
-	}
-	return true
 }

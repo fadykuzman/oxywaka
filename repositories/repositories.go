@@ -11,8 +11,6 @@ import (
 
 type IBaseRepository interface {
 	GetDialector() string
-	GetTableDDLMysql(string) (string, error)
-	GetTableDDLSqlite(string) (string, error)
 	RunInTx(func(*gorm.DB) error) error
 	VacuumOrOptimize()
 }

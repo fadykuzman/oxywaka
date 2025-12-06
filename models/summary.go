@@ -24,8 +24,10 @@ const (
 	SummaryCategory uint8 = 8
 )
 
-const UnknownSummaryKey = "unknown"
-const DefaultProjectLabel = "default"
+const (
+	UnknownSummaryKey   = "unknown"
+	DefaultProjectLabel = "default"
+)
 
 type Summaries []*Summary
 
@@ -38,10 +40,7 @@ type Summary struct {
 
 	// Previously, all the following properties created a cascade foreign key constraint on the summary_items table
 	// back to this summary table resulting in 5 identical foreign key constraints on the summary_items table.
-	// This is not a problem for PostgreSQL, MySQL and SQLite, but for MSSQL (not supported anymore though), which complains about circular cascades on
-	// update/delete between these two tables. All of these created foreign key constraints are identical, so only one constraint is enough.
-	// MySQL will create a foreign key constraint for every property referencing other structs, even no constraint is specified in tags.
-	// So explicitly set gorm:"-" in all other properties to avoid creating duplicate foreign key constraints
+	// Explicitly set gorm:"-" in all other properties to avoid creating duplicate foreign key constraints
 	Projects         SummaryItems `json:"projects" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	Languages        SummaryItems `json:"languages" gorm:"-"`
 	Editors          SummaryItems `json:"editors" gorm:"-"`
