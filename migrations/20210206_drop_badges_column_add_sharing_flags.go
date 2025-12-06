@@ -1,10 +1,11 @@
 package migrations
 
 import (
+	"log/slog"
+
 	"github.com/muety/wakapi/config"
 	"github.com/muety/wakapi/models"
 	"gorm.io/gorm"
-	"log/slog"
 )
 
 func init() {
@@ -35,11 +36,6 @@ func init() {
 			}
 			if err := db.Exec("UPDATE users SET share_machines = TRUE WHERE badges_enabled = TRUE").Error; err != nil {
 				return err
-			}
-
-			if cfg.Db.Dialect == config.SQLDialectSqlite {
-				slog.Info("not attempting to drop column on sqlite", "column", "badges_enabled")
-				return nil
 			}
 
 			if err := migrator.DropColumn(&models.User{}, "badges_enabled"); err != nil {

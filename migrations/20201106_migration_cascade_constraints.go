@@ -1,10 +1,11 @@
 package migrations
 
 import (
+	"log/slog"
+
 	"github.com/muety/wakapi/config"
 	"github.com/muety/wakapi/models"
 	"gorm.io/gorm"
-	"log/slog"
 )
 
 func init() {
@@ -17,14 +18,6 @@ func init() {
 			// afterwards let them be re-created by auto migrate with the newly introduced cascade settings,
 
 			migrator := db.Migrator()
-
-			if cfg.Db.Dialect == config.SQLDialectSqlite {
-				// https://stackoverflow.com/a/1884893/3112139
-				// unfortunately, we can't migrate existing sqlite databases to the newly introduced cascade settings
-				// things like deleting all summaries won't work in those cases unless an entirely new db is created
-				slog.Info("not attempting to drop and regenerate constraints on sqlite")
-				return nil
-			}
 
 			if !migrator.HasTable(&models.KeyStringValue{}) {
 				slog.Info("key-value table not yet existing")

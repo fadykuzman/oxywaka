@@ -1,10 +1,11 @@
 package migrations
 
 import (
+	"strings"
+
 	"github.com/muety/wakapi/config"
 	"github.com/muety/wakapi/models"
 	"gorm.io/gorm"
-	"strings"
 )
 
 // fix for https://github.com/muety/wakapi/issues/416
@@ -15,10 +16,6 @@ func init() {
 	f := migrationFunc{
 		name: name,
 		f: func(db *gorm.DB, cfg *config.Config) error {
-			if cfg.Db.Dialect != config.SQLDialectMysql {
-				return nil
-			}
-
 			if !db.Migrator().HasTable(&models.Summary{}) || !db.Migrator().HasTable(&models.SummaryItem{}) {
 				return nil
 			}

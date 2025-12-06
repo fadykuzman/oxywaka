@@ -16,10 +16,6 @@ func init() {
 
 			statement := "UPDATE users SET has_data = TRUE"
 
-			if cfg.Db.IsMssql() {
-				statement = "UPDATE users SET has_data = 1"
-			}
-
 			if err := db.Exec(statement).Error; err != nil {
 				return err
 			}

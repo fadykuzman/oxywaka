@@ -4,7 +4,6 @@ import (
 	"github.com/muety/wakapi/config"
 	"github.com/muety/wakapi/models"
 	"gorm.io/gorm"
-	"log/slog"
 )
 
 // migration to fix https://github.com/muety/wakapi/issues/346
@@ -22,13 +21,6 @@ func init() {
 		f: func(db *gorm.DB, cfg *config.Config) error {
 			if !db.Migrator().HasTable(&models.KeyStringValue{}) || hasRun(name, db) {
 				return nil
-			}
-
-			if cfg.Db.IsSQLite() && db.Migrator().HasIndex(&models.Heartbeat{}, idxName) {
-				slog.Info("running migration", "name", name)
-				if err := db.Migrator().DropIndex(&models.Heartbeat{}, idxName); err != nil {
-					slog.Warn("failed to drop index", "indexName", idxName)
-				}
 			}
 
 			setHasRun(name, db)

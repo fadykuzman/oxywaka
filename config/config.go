@@ -1,8 +1,10 @@
+// Package config implements application configuration loading and access
 package config
 
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -13,8 +15,6 @@ import (
 
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/duke-git/lancet/v2/strutil"
-
-	"log/slog"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/gorilla/securecookie"
@@ -27,10 +27,7 @@ import (
 const (
 	DefaultConfigPath = "config.yml"
 
-	SQLDialectMysql    = "mysql"
 	SQLDialectPostgres = "postgres"
-	SQLDialectSqlite   = "sqlite3"
-	SQLDialectMssql    = "mssql"
 
 	KeyLatestTotalTime              = "latest_total_time"
 	KeyLatestTotalUsers             = "latest_total_users"
@@ -76,15 +73,19 @@ var emailProviders = []string{
 
 // first wakatime commit was on this day ;-) so no real heartbeats should exist before
 // https://github.com/wakatime/legacy-python-cli/commit/3da94756aa1903c1cca5035803e3f704e818c086
-const heartbeatsMinDate = "2013-07-06"
-const colorsFile = "data/colors.json"
+const (
+	heartbeatsMinDate = "2013-07-06"
+	colorsFile        = "data/colors.json"
+)
 
 var leaderboardScopes = []string{"24_hours", "week", "month", "year", "7_days", "14_days", "30_days", "6_months", "12_months", "all_time"}
 
 var appStartTime = time.Now()
 
-var cfg *Config
-var env string
+var (
+	cfg *Config
+	env string
+)
 
 type appConfig struct {
 	LeaderboardEnabled        bool                         `yaml:"leaderboard_enabled" default:"true" env:"WAKAPI_LEADERBOARD_ENABLED"`
@@ -154,7 +155,6 @@ type dbConfig struct {
 	MaxConn                 uint   `yaml:"max_conn" default:"10" env:"WAKAPI_DB_MAX_CONNECTIONS"`
 	Ssl                     bool   `default:"false" env:"WAKAPI_DB_SSL"`
 	Compress                bool   `yaml:"compress" default:"false" env:"WAKAPI_DB_COMPRESS"`
-	MysqlOptimize           bool   `default:"false" env:"WAKAPI_MYSQL_OPTIMIZE"` // apparently not recommended, because usually has very little effect but takes forever and partially locks the table
 	AutoMigrateFailSilently bool   `yaml:"automigrate_fail_silently" default:"false" env:"WAKAPI_DB_AUTOMIGRATE_FAIL_SILENTLY"`
 }
 
@@ -239,8 +239,8 @@ func (c *oidcProviderConfig) String() string {
 }
 
 func (c *oidcProviderConfig) Validate() error {
-	var namePattern = regexp.MustCompile("^[a-zA-Z0-9-]+$")
-	var endpointPattern = regexp.MustCompile("^https?://")
+	namePattern := regexp.MustCompile("^[a-zA-Z0-9-]+$")
+	endpointPattern := regexp.MustCompile("^https?://")
 
 	if !namePattern.MatchString(c.Name) {
 		return fmt.Errorf("invalid provider name '%s', must only contain alphanumeric characters or '-'", c.Name)
@@ -479,20 +479,8 @@ func (c *securityConfig) parseRate(rate string) (int, time.Duration) {
 	return limit, time.Duration(window) * windowScale
 }
 
-func (c *dbConfig) IsSQLite() bool {
-	return c.Dialect == "sqlite3"
-}
-
-func (c *dbConfig) IsMySQL() bool {
-	return c.Dialect == "mysql"
-}
-
 func (c *dbConfig) IsPostgres() bool {
 	return c.Dialect == "postgres"
-}
-
-func (c *dbConfig) IsMssql() bool {
-	return c.Dialect == SQLDialectMssql
 }
 
 func (c *serverConfig) GetPublicUrl() string {
@@ -526,7 +514,7 @@ func readColors() map[string]map[string]string {
 		}
 	}
 
-	var colors = make(map[string]map[string]string)
+	colors := make(map[string]map[string]string)
 	if err := json.Unmarshal(raw, &colors); err != nil {
 		Log().Fatal(err.Error())
 	}
@@ -537,12 +525,6 @@ func readColors() map[string]map[string]string {
 func resolveDbDialect(dbType string) string {
 	if dbType == "cockroach" {
 		return "postgres"
-	}
-	if dbType == "sqlite" {
-		return "sqlite3"
-	}
-	if dbType == "mariadb" {
-		return "mysql"
 	}
 	return dbType
 }
@@ -578,10 +560,6 @@ func Load(configFlag string, version string) *Config {
 	config.Db.Dialect = resolveDbDialect(config.Db.Type)
 	if config.Db.Type == "cockroach" {
 		slog.Warn("cockroach is not officially supported, it is strongly recommended to migrate to postgres instead")
-	}
-	if config.Db.IsMssql() {
-		slog.Error("mssql is not supported anymore, sorry")
-		os.Exit(1)
 	}
 
 	hashKey := securecookie.GenerateRandomKey(64)
@@ -630,13 +608,6 @@ func Load(configFlag string, version string) *Config {
 	// some validation checks
 	if config.Server.ListenIpV4 == "-" && config.Server.ListenIpV6 == "-" && config.Server.ListenSocket == "" {
 		Log().Fatal("either of listen_ipv4 or listen_ipv6 or listen_socket must be set")
-	}
-	if config.Db.MaxConn < 2 && !config.Db.IsSQLite() {
-		Log().Warn("you should use a pool of at least 2 database connections")
-	}
-	if config.Db.MaxConn > 1 && config.Db.IsSQLite() {
-		Log().Warn("with sqlite, only a single connection is supported") // otherwise 'PRAGMA foreign_keys=ON' would somehow have to be set for every connection in the pool
-		config.Db.MaxConn = 1
 	}
 	if config.Mail.Provider != "" && utils.FindString(config.Mail.Provider, emailProviders, "") == "" {
 		Log().Fatal("unknown mail provider", "provider", config.Mail.Provider)
@@ -735,7 +706,7 @@ func renameEnvVars() {
 	// and neither allows to specify prefixes via tags (only the entire variable name as "env:"), we simply rename variables from the "Wakapi-style" format to what configor expects.
 	// In the long run, we might want to migrate to a different config parser (e.g. https://github.com/knadh/koanf), since configor seems to be dead.
 	// Also see https://github.com/muety/wakapi/issues/856.
-	var envOidcPrefix = regexp.MustCompile("WAKAPI_OIDC_PROVIDERS_(\\d+)_([A-Z_]+)")
+	envOidcPrefix := regexp.MustCompile("WAKAPI_OIDC_PROVIDERS_(\\d+)_([A-Z_]+)")
 
 	for _, e := range os.Environ() {
 		parts := strings.Split(e, "=")

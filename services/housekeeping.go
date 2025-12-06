@@ -1,14 +1,15 @@
 package services
 
 import (
+	"log/slog"
+	"time"
+
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/muety/artifex/v2"
 	"github.com/muety/wakapi/config"
 	"github.com/muety/wakapi/models"
 	"github.com/muety/wakapi/repositories"
 	"github.com/muety/wakapi/utils"
-	"log/slog"
-	"time"
 )
 
 type HousekeepingService struct {
@@ -38,9 +39,6 @@ func (s *HousekeepingService) Schedule() {
 	s.scheduleInactiveUsersCleanup()
 	if s.config.App.WarmCaches {
 		s.scheduleProjectStatsCacheWarming()
-	}
-	if !s.config.Db.IsMySQL() || s.config.Db.MysqlOptimize {
-		s.scheduleVacuumOrOptimizeDatabase()
 	}
 }
 

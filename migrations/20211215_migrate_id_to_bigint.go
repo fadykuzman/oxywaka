@@ -1,9 +1,10 @@
 package migrations
 
 import (
+	"log/slog"
+
 	"github.com/muety/wakapi/config"
 	"gorm.io/gorm"
-	"log/slog"
 )
 
 func init() {
@@ -17,16 +18,7 @@ func init() {
 
 			slog.Info("this may take a while!")
 
-			if cfg.Db.IsMySQL() {
-				tx := db.Begin()
-				if err := tx.Exec("ALTER TABLE heartbeats MODIFY COLUMN id BIGINT UNSIGNED AUTO_INCREMENT").Error; err != nil {
-					return err
-				}
-				if err := tx.Exec("ALTER TABLE summary_items MODIFY COLUMN id BIGINT UNSIGNED AUTO_INCREMENT").Error; err != nil {
-					return err
-				}
-				tx.Commit()
-			} else if cfg.Db.IsPostgres() {
+			if cfg.Db.IsPostgres() {
 				// postgres does not have unsigned data types
 				// https://www.postgresql.org/docs/10/datatype-numeric.html
 				tx := db.Begin()

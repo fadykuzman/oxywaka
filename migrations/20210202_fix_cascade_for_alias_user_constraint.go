@@ -1,10 +1,11 @@
 package migrations
 
 import (
+	"log/slog"
+
 	"github.com/muety/wakapi/config"
 	"github.com/muety/wakapi/models"
 	"gorm.io/gorm"
-	"log/slog"
 )
 
 func init() {
@@ -14,12 +15,6 @@ func init() {
 		name: name,
 		f: func(db *gorm.DB, cfg *config.Config) error {
 			migrator := db.Migrator()
-
-			if cfg.Db.Dialect == config.SQLDialectSqlite {
-				// see 20201106_migration_cascade_constraints
-				slog.Info("not attempting to drop and regenerate constraints on sqlite")
-				return nil
-			}
 
 			if !migrator.HasTable(&models.KeyStringValue{}) {
 				slog.Info("key-value table not yet existing")

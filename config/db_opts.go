@@ -25,11 +25,5 @@ func (opts WakapiDBOpts) AfterInitialize(db *gorm.DB) error {
 		}
 	}
 
-	if opts.dbConfig.IsSQLite() {
-		if err := db.Exec("PRAGMA foreign_keys = ON;").Error; err != nil {
-			return err
-		}
-	}
-
 	return nil
 }

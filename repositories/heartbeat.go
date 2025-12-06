@@ -187,14 +187,6 @@ func (r *HeartbeatRepository) GetRangeByUser(user *models.User) (*models.RangeBy
 }
 
 func (r *HeartbeatRepository) Count(approximate bool) (count int64, err error) {
-	if r.config.Db.IsMySQL() && approximate {
-		err = r.db.Table("information_schema.tables").
-			Select("table_rows").
-			Where("table_schema = ?", r.config.Db.Name).
-			Where("table_name = 'heartbeats'").
-			Scan(&count).Error
-	}
-
 	if count == 0 {
 		err = r.db.
 			Model(&models.Heartbeat{}).

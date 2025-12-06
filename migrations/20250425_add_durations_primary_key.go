@@ -19,9 +19,6 @@ func init() {
 				return nil
 			}
 
-			if cfg.Db.Dialect != config.SQLDialectSqlite {
-				return nil
-			}
 			if !db.Migrator().HasTable("durations") {
 				return nil
 			}

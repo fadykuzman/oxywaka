@@ -1,13 +1,11 @@
 package migrations
 
 import (
-	"regexp"
-	"strings"
+	"log/slog"
 
 	"github.com/muety/wakapi/config"
 	"github.com/muety/wakapi/models"
 	"gorm.io/gorm"
-	"log/slog"
 )
 
 // due to an error in the model definition, idx_time_user used to only cover 'user_id', but not time column
@@ -24,39 +22,15 @@ func init() {
 			}
 
 			var drop bool
-			if cfg.Db.IsMssql() {
-				// mssql migrator doesn't support GetIndexes() currently
-				// mssql is implemented after this migration, so ignore it.
-				return nil
+			indexes, err := migrator.GetIndexes(&models.Heartbeat{})
+			if err != nil {
+				return err
 			}
-			if cfg.Db.IsSQLite() {
-				// sqlite migrator doesn't support GetIndexes() currently
-				var ddl string
-				if err := db.
-					Table("sqlite_schema").
-					Select("sql").
-					Where("type = 'index'").
-					Where("tbl_name = 'heartbeats'").
-					Where("name = 'idx_time_user'").
-					Scan(&ddl).Error; err != nil {
-					return err
-				}
 
-				matches := regexp.MustCompile("(?i)\\((.+)\\)$").FindStringSubmatch(ddl)
-				if len(matches) > 0 && (!strings.Contains(matches[0], "`user_id`") || !strings.Contains(matches[0], "`time`")) {
+			for _, idx := range indexes {
+				if idx.Table() == "heartbeats" && idx.Name() == "idx_time_user" && len(idx.Columns()) == 1 {
 					drop = true
-				}
-			} else {
-				indexes, err := migrator.GetIndexes(&models.Heartbeat{})
-				if err != nil {
-					return err
-				}
-
-				for _, idx := range indexes {
-					if idx.Table() == "heartbeats" && idx.Name() == "idx_time_user" && len(idx.Columns()) == 1 {
-						drop = true
-						break
-					}
+					break
 				}
 			}
 

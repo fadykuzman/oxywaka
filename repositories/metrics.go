@@ -30,13 +30,7 @@ func (srv *MetricsRepository) GetDatabaseSize() (size int64, err error) {
 	cfg := srv.config.Db
 
 	query := srv.db.Raw("SELECT 0")
-	if cfg.IsMySQL() {
-		query = srv.db.Raw(sizeTplMysql, cfg.Name)
-	} else if cfg.IsPostgres() {
-		query = srv.db.Raw(sizeTplPostgres, cfg.Name)
-	} else if cfg.IsSQLite() {
-		query = srv.db.Raw(sizeTplSqlite)
-	}
+	query = srv.db.Raw(sizeTplPostgres, cfg.Name)
 
 	err = query.Scan(&size).Error
 	return size, err

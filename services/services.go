@@ -1,3 +1,4 @@
+// Package services defines the interfaces for various services used in the application.
 package services
 
 import (

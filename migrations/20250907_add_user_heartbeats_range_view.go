@@ -22,15 +22,9 @@ func init() {
 
 			if err := db.Transaction(func(tx *gorm.DB) error {
 				// https://stackoverflow.com/a/1236008/3112139
-				if cfg.Db.IsSQLite() {
-					if err := tx.Migrator().DropView("user_heartbeats_range"); err != nil {
-						return err
-					}
-				}
 
 				if err := tx.Migrator().CreateView("user_heartbeats_range", gorm.ViewOption{
-					Query:   db.Raw(q),
-					Replace: !cfg.Db.IsSQLite(),
+					Query: db.Raw(q),
 				}); err != nil {
 					return err
 				}
