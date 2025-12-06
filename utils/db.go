@@ -2,35 +2,19 @@ package utils
 
 import (
 	"fmt"
+	"log/slog"
 	"reflect"
 	"strings"
 
 	"gorm.io/gorm"
-	"log/slog"
 )
 
 func IsCleanDB(db *gorm.DB) bool {
-	if db.Dialector.Name() == "sqlite" {
-		var count int64
-		if err := db.Raw("SELECT count(*) from sqlite_master WHERE type = 'table'").Scan(&count).Error; err != nil {
-			slog.Error("failed to check if database is clean", "error", err)
-			return false
-		}
-		return count == 0
-	}
 	slog.Warn("IsCleanDB is not yet implemented for dialect", "dialect", db.Dialector.Name())
 	return false
 }
 
 func HasConstraints(db *gorm.DB) bool {
-	if db.Dialector.Name() == "sqlite" {
-		var count int64
-		if err := db.Raw("SELECT count(*) from sqlite_master WHERE sql LIKE '%CONSTRAINT%'").Scan(&count).Error; err != nil {
-			slog.Error("failed to check if database has constraints", "error", err)
-			return false
-		}
-		return count != 0
-	}
 	slog.Warn("HasForeignKeyConstraints is not yet implemented for dialect", "dialect", db.Dialector.Name())
 	return false
 }
@@ -64,8 +48,8 @@ func (s stringWriter) WriteString(str string) (int, error) {
 	return s.Builder.WriteString(str)
 }
 
-// QuoteDbIdentifier quotes a column name used in a query.
-func QuoteDbIdentifier(db *gorm.DB, identifier string) string {
+// QuoteDBIdentifier quotes a column name used in a query.
+func QuoteDBIdentifier(db *gorm.DB, identifier string) string {
 	builder := stringWriter{Builder: &strings.Builder{}}
 	db.Dialector.QuoteTo(builder, identifier)
 	return builder.Builder.String()
@@ -75,7 +59,7 @@ func QuoteDbIdentifier(db *gorm.DB, identifier string) string {
 func QuoteSql(db *gorm.DB, queryTemplate string, identifiers ...string) string {
 	quotedIdentifiers := make([]interface{}, len(identifiers))
 	for i, identifier := range identifiers {
-		quotedIdentifiers[i] = QuoteDbIdentifier(db, identifier)
+		quotedIdentifiers[i] = QuoteDBIdentifier(db, identifier)
 	}
 	return fmt.Sprintf(queryTemplate, quotedIdentifiers...)
 }
