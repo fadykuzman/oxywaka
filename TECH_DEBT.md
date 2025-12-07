@@ -13,12 +13,14 @@
 **Location:** `repositories/user.go:InsertOrGet()`
 
 **Issue:**
+
 - Non-atomic operation (FindOne + Create in two separate queries)
 - Race condition vulnerability
 - Inefficient (two database roundtrips)
 - Unclear semantics (get-or-create vs insert-or-ignore)
 
 **Current Implementation:**
+
 ```go
 func InsertOrGet(user *User) (*User, bool, error) {
     if existing := FindOne(user.ID); existing != nil {
@@ -33,6 +35,7 @@ func InsertOrGet(user *User) (*User, bool, error) {
 Between FindOne and Create, another request could insert the same user → duplicate key error or lost race.
 
 **Better Approach:**
+
 ```sql
 -- PostgreSQL native support
 INSERT INTO users (...) VALUES (...)
@@ -41,6 +44,7 @@ RETURNING *, (xmax = 0) AS created;
 ```
 
 **When to Fix:**
+
 - During GORM → sqlc migration
 - Use database-native UPSERT operations
 - Single atomic query
@@ -57,11 +61,13 @@ RETURNING *, (xmax = 0) AS created;
 **Location:** `repositories/user.go:DeleteTx()`
 
 **Issue:**
+
 - Takes `*gorm.DB` as parameter (GORM-specific)
 - Not in repository interface (breaks abstraction)
 - Makes testing/mocking harder
 
 **Current Implementation:**
+
 ```go
 func DeleteTx(user *User, tx *gorm.DB) error {
     return tx.Delete(user).Error
@@ -69,6 +75,7 @@ func DeleteTx(user *User, tx *gorm.DB) error {
 ```
 
 **Better Approach:**
+
 ```go
 // Define generic transaction interface
 type Transaction interface {
@@ -81,6 +88,7 @@ func DeleteInTx(user *User, tx Transaction) error
 ```
 
 **When to Fix:**
+
 - During GORM → sqlc migration
 - Create transaction abstraction layer
 - Works with any database driver
@@ -96,6 +104,7 @@ func DeleteInTx(user *User, tx Transaction) error
 **Location:** `repositories/*_test.go` (missing)
 
 **Issue:**
+
 - No tests for database layer (highest risk area)
 - Makes refactoring dangerous
 - No protection against regressions
@@ -103,6 +112,7 @@ func DeleteInTx(user *User, tx Transaction) error
 **Status:** 🚧 **IN PROGRESS** - Writing interface-based tests
 
 **When Complete:**
+
 - All repository CRUD operations tested
 - Tests against interfaces (survive GORM → sqlc migration)
 - Real Postgres via testcontainers
@@ -118,16 +128,18 @@ func DeleteInTx(user *User, tx Transaction) error
 **Location:** Multiple files using `gorm.DB`, GORM models, GORM queries
 
 **Issue:**
+
 - ORM abstraction has performance cost
 - Less control over SQL
-- Multi-database support adds complexity (SQLite/MySQL/Postgres)
 
 **Current State:**
+
 - ✅ Keeping GORM for now (pragmatic decision)
 - ✅ Writing interface-based tests
 - ✅ Tests will survive migration
 
 **Future Migration Path:**
+
 1. Write SQL schema (`schema.sql`)
 2. Write SQL queries (`queries.sql`)
 3. Generate sqlc code
@@ -137,6 +149,7 @@ func DeleteInTx(user *User, tx Transaction) error
 7. Remove GORM
 
 **When to Fix:**
+
 - After product ships and validates
 - When performance becomes bottleneck
 - Estimated effort: 2-3 weeks
@@ -152,12 +165,14 @@ func DeleteInTx(user *User, tx Transaction) error
 **Location:** `config/config.go`, migrations, repository queries
 
 **Issue:**
+
 - Maintains compatibility with 3 databases
 - Adds complexity (dialect-specific code)
 - More testing surface area
 - Portfolio bloat
 
 **Plan:**
+
 - ✅ Strip SQLite support (PENDING)
 - ✅ Strip MySQL support (PENDING)
 - ✅ Keep Postgres only

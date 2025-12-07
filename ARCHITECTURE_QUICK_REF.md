@@ -1,4 +1,4 @@
-# Wakapi Architecture - Quick Reference
+# OxyWaka Architecture - Quick Reference
 
 **Purpose:** Fast visual reference for understanding system flow
 
@@ -56,8 +56,7 @@
                      ▼
          ┌──────────────────────┐
          │  Database            │
-         │  (SQLite/MySQL/      │
-         │   PostgreSQL)        │
+         │   PostgreSQL         │
          └──────────────────────┘
 ```
 
@@ -139,6 +138,7 @@ oxywaka/
 ## 🔄 Data Flow Patterns
 
 ### Pattern 1: Heartbeat → Summary (Batch)
+
 ```
 Raw Heartbeats ──┐
                  │ Daily Aggregation Job (02:15)
@@ -151,6 +151,7 @@ Why: Dashboard needs fast queries, not real-time aggregation
 ```
 
 ### Pattern 2: Heartbeats → Durations (Computed)
+
 ```
 Heartbeats (time-ordered) ──┐
                             │ Group into sessions
@@ -162,6 +163,7 @@ Why: Detect continuous coding sessions ("deep work")
 ```
 
 ### Pattern 3: Real-time Cache Updates
+
 ```
 New Heartbeat ──▶ Publish Event ──▶ Subscribers ──┐
                                                    ├──▶ Increment user count
@@ -175,14 +177,14 @@ Why: Keep caches fresh without coupling services
 
 ## 🏗️ Layer Responsibilities
 
-| Layer | Responsibility | Example |
-|-------|---------------|---------|
-| **Routes/Handlers** | HTTP I/O, validation | Parse JSON, return 201 |
-| **Services** | Business logic, orchestration | Dedupe, categorize, publish events |
-| **Repositories** | Database queries | `INSERT INTO heartbeats` |
-| **Models** | Data structures | `Heartbeat`, `Summary` |
-| **Middlewares** | Cross-cutting concerns | Auth, logging, CORS |
-| **Config** | Infrastructure setup | DB, EventBus, Scheduler |
+| Layer               | Responsibility                | Example                            |
+| ------------------- | ----------------------------- | ---------------------------------- |
+| **Routes/Handlers** | HTTP I/O, validation          | Parse JSON, return 201             |
+| **Services**        | Business logic, orchestration | Dedupe, categorize, publish events |
+| **Repositories**    | Database queries              | `INSERT INTO heartbeats`           |
+| **Models**          | Data structures               | `Heartbeat`, `Summary`             |
+| **Middlewares**     | Cross-cutting concerns        | Auth, logging, CORS                |
+| **Config**          | Infrastructure setup          | DB, EventBus, Scheduler            |
 
 ---
 
@@ -214,47 +216,56 @@ AggregationService ────────────────┴───�
 ## 📊 Database Tables (Core 4)
 
 ### 1. **heartbeats** (Raw activity)
+
 ```sql
 id, user_id, entity, type, category, project, branch,
 language, is_write, editor, operating_system, machine,
 time, hash, created_at
 ```
+
 **Key Fields:**
+
 - `category`: "coding" | "browsing"
 - `is_write`: Active vs passive
 - `time`: Millisecond precision
 
 ### 2. **durations** (Sessions)
+
 ```sql
 id, user_id, time, duration, project, language, editor,
 operating_system, machine, branch, group_hash
 ```
+
 **Purpose:** Pre-computed coding sessions
 
 ### 3. **summaries** (Aggregations)
+
 ```sql
 id, user_id, from_time, to_time, num_heartbeats
 ```
+
 **Purpose:** Container for summary items
 
 ### 4. **summary_items** (Breakdowns)
+
 ```sql
 id, summary_id, type, key, total
 ```
+
 **Example:** type=0 (project), key="wakapi", total=3600 (seconds)
 
 ---
 
 ## ⚡ Performance Optimizations
 
-| Technique | Implementation | Benefit |
-|-----------|---------------|---------|
-| **Caching** | In-memory (go-cache) | Avoid repeated DB queries |
-| **Batch Inserts** | InsertBatch() | Reduce DB round-trips |
-| **Pre-aggregation** | Daily summary generation | Fast dashboard loads |
-| **Streaming** | Channel-based iteration | Handle large datasets |
-| **Indexes** | user_id+time, hash | Fast lookups |
-| **Connection Pool** | MaxConn = 10 | Reuse connections |
+| Technique           | Implementation           | Benefit                   |
+| ------------------- | ------------------------ | ------------------------- |
+| **Caching**         | In-memory (go-cache)     | Avoid repeated DB queries |
+| **Batch Inserts**   | InsertBatch()            | Reduce DB round-trips     |
+| **Pre-aggregation** | Daily summary generation | Fast dashboard loads      |
+| **Streaming**       | Channel-based iteration  | Handle large datasets     |
+| **Indexes**         | user_id+time, hash       | Fast lookups              |
+| **Connection Pool** | MaxConn = 10             | Reuse connections         |
 
 ---
 
@@ -275,6 +286,7 @@ id, summary_id, type, key, total
 ## 🎯 Extension Points for OxyWaka
 
 ### 1. **Add Insights Service**
+
 ```go
 // services/insights.go
 type InsightsService struct {
@@ -285,18 +297,21 @@ type InsightsService struct {
 ```
 
 ### 2. **Subscribe to Events**
+
 ```go
 // Subscribe to real-time heartbeats
 eventBus.Subscribe(0, EventHeartbeatCreate)
 ```
 
 ### 3. **Add API Routes**
+
 ```go
 // routes/api/insights.go
 router.Get("/api/insights/score", handler.GetScore)
 ```
 
 ### 4. **Extend Database**
+
 ```sql
 CREATE TABLE insight_scores (
     user_id, date, productivity_score,
@@ -305,6 +320,7 @@ CREATE TABLE insight_scores (
 ```
 
 ### 5. **Background Jobs**
+
 ```go
 // Schedule insights computation
 insightsService.Schedule() // Add to main.go:202
@@ -338,13 +354,13 @@ func TestSummary(t *testing.T) {
 
 ## 📈 Monitoring & Observability
 
-| Feature | Implementation | Location |
-|---------|---------------|----------|
-| **Logging** | slog (structured) | Throughout |
-| **Metrics** | Prometheus exports | `/api/metrics` |
-| **Health Check** | Database ping | `/api/health` |
-| **Diagnostics** | Error reporting | `/api/diagnostics` |
-| **Profiling** | pprof (optional) | Config flag |
+| Feature          | Implementation     | Location           |
+| ---------------- | ------------------ | ------------------ |
+| **Logging**      | slog (structured)  | Throughout         |
+| **Metrics**      | Prometheus exports | `/api/metrics`     |
+| **Health Check** | Database ping      | `/api/health`      |
+| **Diagnostics**  | Error reporting    | `/api/diagnostics` |
+| **Profiling**    | pprof (optional)   | Config flag        |
 
 ---
 
@@ -378,6 +394,7 @@ func TestSummary(t *testing.T) {
 ---
 
 **Next Steps:**
+
 1. Read `ARCHITECTURE.md` for detailed diagrams
 2. Explore `main.go` to see initialization
 3. Trace heartbeat flow: routes → services → repos
