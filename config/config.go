@@ -522,11 +522,8 @@ func readColors() map[string]map[string]string {
 	return colors
 }
 
-func resolveDbDialect(dbType string) string {
-	if dbType == "cockroach" {
-		return "postgres"
-	}
-	return dbType
+func resolveDBDialect() string {
+	return "postgres"
 }
 
 func Set(config *Config) {
@@ -557,10 +554,7 @@ func Load(configFlag string, version string) *Config {
 
 	config.InstanceId = uuid.Must(uuid.NewV4()).String()
 	config.App.Colors = readColors()
-	config.Db.Dialect = resolveDbDialect(config.Db.Type)
-	if config.Db.Type == "cockroach" {
-		slog.Warn("cockroach is not officially supported, it is strongly recommended to migrate to postgres instead")
-	}
+	config.Db.Dialect = resolveDBDialect()
 
 	hashKey := securecookie.GenerateRandomKey(64)
 	blockKey := securecookie.GenerateRandomKey(32)
@@ -568,7 +562,7 @@ func Load(configFlag string, version string) *Config {
 
 	if IsDev(env) {
 		slog.Warn("⚠️ using temporary keys to sign and encrypt cookies in dev mode, make sure to set env to production for real-world use")
-		hashKey, blockKey = getTemporarySecureKeys()
+		hashKey, _ = getTemporarySecureKeys()
 		blockKey = hashKey
 	}
 	if config.Security.InsecureCookies {

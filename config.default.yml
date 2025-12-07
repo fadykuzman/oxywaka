@@ -68,12 +68,12 @@ app:
   datetime_format: Mon, 02 Jan 2006 15:04
 
 db:
-  host:
-  port:
+  host: 127.0.0.1
+  port: 5432
   socket:
-  user:
-  password:
-  name: wakapi_db.db                  # database name for postgres
+  user: wakapi
+  password: wakapi
+  name: wakapi                        # database name for postgres
   dialect: postgres                   # only postgres is supported
   max_conn: 10                        # maximum number of concurrent connections to maintain
   ssl: false                          # whether to use tls for db connection

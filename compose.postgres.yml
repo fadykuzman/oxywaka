@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: "wakapi"
+      POSTGRES_PASSWORD: "wakapi"        # alternatively, set POSTGRES_PASSWORD directly without the use of secrets
+      POSTGRES_DB: "wakapi"
+    ports:
+      - "5432:5432"
+    volumes:
+      - wakapi-db-data:/var/lib/postgresql/data
+
+volumes:
+  wakapi-db-data: {}

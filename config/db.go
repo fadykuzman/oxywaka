@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -10,7 +11,7 @@ import (
 /*
 A quick note to myself including some clarifications about time zones.
 
-For Postgres, the story is even a different one.
+For Postgres:
 - There are `timestamp` and `timestamptz` columns, whereby the former seems to behave very strangely.
 - Apparently, when storing dates, they'll just chop off zone information entirely, while for retrieval, all dates are interpreted as UTC
 - If Wakapi runs in CEST, '2025-03-25T14:00:00 +02:00' will end up as '2025-03-25T14:00:00' in the database and become '2025-03-25T16:00:00 +02:00' when retrieved back (at least in case of our annoying models.CustomTime, because of https://github.com/muety/wakapi/blob/bc2096f4117275d110a84f5b367aa8fdb4bd87ba/models/shared.go#L95)
@@ -20,8 +21,10 @@ For Postgres, the story is even a different one.
 */
 
 func (c *dbConfig) GetDialector() gorm.Dialector {
+	connectionString := connectionString(c)
+	log.Println("Connecting to Postgres with connection string:", connectionString)
 	return postgres.New(postgres.Config{
-		DSN: connectionString(c),
+		DSN: connectionString,
 	})
 }
 
