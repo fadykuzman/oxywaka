@@ -143,7 +143,6 @@ type securityConfig struct {
 
 type dbConfig struct {
 	Host                    string `env:"WAKAPI_DB_HOST"`
-	Socket                  string `env:"WAKAPI_DB_SOCKET"`
 	Port                    uint   `env:"WAKAPI_DB_PORT"`
 	User                    string `env:"WAKAPI_DB_USER"`
 	Password                string `env:"WAKAPI_DB_PASSWORD"`
@@ -154,7 +153,6 @@ type dbConfig struct {
 	DSN                     string `yaml:"DSN" default:"" env:"WAKAPI_DB_DSN"`
 	MaxConn                 uint   `yaml:"max_conn" default:"10" env:"WAKAPI_DB_MAX_CONNECTIONS"`
 	Ssl                     bool   `default:"false" env:"WAKAPI_DB_SSL"`
-	Compress                bool   `yaml:"compress" default:"false" env:"WAKAPI_DB_COMPRESS"`
 	AutoMigrateFailSilently bool   `yaml:"automigrate_fail_silently" default:"false" env:"WAKAPI_DB_AUTOMIGRATE_FAIL_SILENTLY"`
 }
 

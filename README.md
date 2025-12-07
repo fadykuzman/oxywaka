@@ -86,8 +86,6 @@ $ docker run -d \
   ghcr.io/muety/wakapi:latest
 ```
 
-**Note:** By default, SQLite is used as a database. To run Wakapi in Docker with MySQL or Postgres, see [Dockerfile](https://github.com/muety/wakapi/blob/master/Dockerfile) and [config.default.yml](https://github.com/muety/wakapi/blob/master/config.default.yml) for further options.
-
 #### Docker Compose
 
 Alternatively, you can use Docker Compose for an even more straightforward deployment. See [compose.yml](https://github.com/muety/wakapi/blob/master/compose.yml) for configuration details.
@@ -103,8 +101,6 @@ export WAKAPI_MAIL_SMTP_PASS=changeme
 
 docker compose up -d
 ```
-
-If you prefer to persist data in a local directory while using SQLite as the database, make sure to set the correct `user` option in the Docker Compose configuration to avoid permission issues.
 
 ### 🧑‍💻 Option 4: Compile and run from source
 
@@ -156,7 +152,7 @@ You can specify configuration options either via a config file (default: `config
 | `app.aggregation_time` /<br>`WAKAPI_AGGREGATION_TIME`                                       | `0 15 2 * * *`                                   | Time of day at which to periodically run summary generation for all users                                                                                                       |
 | `app.report_time_weekly` /<br>`WAKAPI_REPORT_TIME_WEEKLY`                                   | `0 0 18 * * 5`                                   | Week day and time at which to send e-mail reports                                                                                                                               |
 | `app.data_cleanup_time` /<br>`WAKAPI_DATA_CLEANUP_TIME`                                     | `0 0 6 * * 0`                                    | When to perform data cleanup operations (see `app.data_retention_months`)                                                                                                       |
-| `app.optimize_database_time` /<br>`WAKAPI_OPTIMIZE_DATABASE_TIME`                           | `0 0 8 1 * *`                                    | When to perform database vacuuming (SQLite, Postgres) or table optimization (MySQL)                                                                                             |
+| `app.optimize_database_time` /<br>`WAKAPI_OPTIMIZE_DATABASE_TIME`                           | `0 0 8 1 * *`                                    | When to perform database vacuuming (Postgres)                                                                                                                                   |
 | `app.import_enabled` /<br>`WAKAPI_IMPORT_ENABLED`                                           | `true`                                           | Whether data imports from WakaTime or other Wakapi instances are permitted                                                                                                      |
 | `app.import_batch_size` /<br>`WAKAPI_IMPORT_BATCH_SIZE`                                     | `50`                                             | Size of batches of heartbeats to insert to the database during importing from external services                                                                                 |
 | `app.import_backoff_min` /<br>`WAKAPI_IMPORT_BACKOFF_MIN`                                   | `5`                                              | "Cooldown" period in minutes before user may attempt another data import                                                                                                        |
@@ -205,15 +201,12 @@ You can specify configuration options either via a config file (default: `config
 | `security.oidc[0].endpoint` /<br> `WAKAPI_OIDC_PROVIDERS_0_ENDPOINT`                        | -                                                | OpenID Connect provider API entrypoint (for [discovery](https://openid.net/specs/openid-connect-discovery-1_0.html))                                                            |
 | `db.host` /<br> `WAKAPI_DB_HOST`                                                            | -                                                | Database host                                                                                                                                                                   |
 | `db.port` /<br> `WAKAPI_DB_PORT`                                                            | -                                                | Database port                                                                                                                                                                   |
-| `db.socket` /<br> `WAKAPI_DB_SOCKET`                                                        | -                                                | Database UNIX socket (alternative to `host`) (for MySQL only)                                                                                                                   |
 | `db.user` /<br> `WAKAPI_DB_USER`                                                            | -                                                | Database user                                                                                                                                                                   |
 | `db.password` /<br> `WAKAPI_DB_PASSWORD`                                                    | -                                                | Database password                                                                                                                                                               |
 | `db.name` /<br> `WAKAPI_DB_NAME`                                                            | `wakapi_db.db`                                   | Database name                                                                                                                                                                   |
-| `db.dialect` /<br> `WAKAPI_DB_TYPE`                                                         | `sqlite3`                                        | Database type (one of `sqlite3`, `mysql`, `postgres`)                                                                                                                           |
-| `db.charset` /<br> `WAKAPI_DB_CHARSET`                                                      | `utf8mb4`                                        | Database connection charset (for MySQL only)                                                                                                                                    |
+| `db.dialect` /<br> `WAKAPI_DB_TYPE`                                                         | `postgres`                                       | Database type                                                                                                                                                                   |
 | `db.max_conn` /<br> `WAKAPI_DB_MAX_CONNECTIONS`                                             | `2`                                              | Maximum number of database connections                                                                                                                                          |
 | `db.ssl` /<br> `WAKAPI_DB_SSL`                                                              | `false`                                          | Whether to use TLS encryption for database connection (Postgres only)                                                                                                           |
-| `db.compress` /<br> `WAKAPI_DB_COMPRESS`                                                    | `false`                                          | Whether to enable compression for database connection (MySQL only)                                                                                                              |
 | `db.automgirate_fail_silently` /<br> `WAKAPI_DB_AUTOMIGRATE_FAIL_SILENTLY`                  | `false`                                          | Whether to ignore schema auto-migration failures when starting up                                                                                                               |
 | `mail.enabled` /<br> `WAKAPI_MAIL_ENABLED`                                                  | `false`                                          | Whether to allow Wakapi to send e-mail (e.g. for password resets)                                                                                                               |
 | `mail.sender` /<br> `WAKAPI_MAIL_SENDER`                                                    | -                                                | Default sender address for outgoing mails                                                                                                                                       |
@@ -235,11 +228,8 @@ You can specify configuration options either via a config file (default: `config
 
 ### Supported databases
 
-Wakapi uses [GORM](https://gorm.io) as an ORM. As a consequence, a set of different relational databases is supported.
+Wakapi uses [GORM](https://gorm.io) as an ORM. Only Postgres is supported
 
-- [SQLite](https://sqlite.org/) (_default, easy setup_)
-- [MySQL](https://hub.docker.com/_/mysql) (_recommended, because most extensively tested_)
-- [MariaDB](https://hub.docker.com/_/mariadb) (_open-source MySQL alternative_)
 - [Postgres](https://hub.docker.com/_/postgres) (_open-source as well_)
 
 ## 🔐 Authentication
@@ -422,30 +412,6 @@ Unit tests are supposed to test business logic on a fine-grained level. They are
 ```bash
 go install github.com/mfridman/tparse@latest  # optional
 CGO_ENABLED=0 go test -json -coverprofile=coverage/coverage.out ./... -run ./... | tparse -all
-```
-
-### API tests
-
-API tests are implemented as black box tests, which interact with a fully-fledged, standalone Wakapi through HTTP requests. They are supposed to check Wakapi's web stack and endpoints, including response codes, headers and data on a syntactical level, rather than checking the actual content that is returned.
-
-Our API (or end-to-end, in some way) tests are implemented as a [Bruno](https://www.usebruno.com/) collection and can be run either from inside Bruno, or using [Bruno CLI](https://www.npmjs.com/package/@usebruno/cli) as a command-line runner.
-
-To get a predictable environment, tests are run against a fresh and clean Wakapi instance with a SQLite database that is populated with nothing but some seed data (see [data.sql](testing/data.sql)). It is usually recommended for software tests to be [safe](https://www.restapitutorial.com/lessons/idempotency.html), stateless and without side effects. In contrary to that paradigm, our API tests strictly require a fixed execution order (which Bruno assures) and their assertions may rely on specific previous tests having succeeded.
-
-#### Prerequisites (Linux only)
-
-```bash
-# 1. sqlite (cli)
-$ sudo apt install sqlite  # Fedora: sudo dnf install sqlite
-
-# 2. bruno cli
-$ npm install -g @usebruno/cli
-```
-
-#### How to run (Linux only)
-
-```bash
-./testing/run_api_tests.sh
 ```
 
 ## 🤓 Developer notes

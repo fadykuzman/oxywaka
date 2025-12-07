@@ -70,7 +70,6 @@ app:
 db:
   host: 127.0.0.1
   port: 5432
-  socket:
   user: wakapi
   password: wakapi
   name: wakapi                        # database name for postgres

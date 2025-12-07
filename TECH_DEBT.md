@@ -173,9 +173,6 @@ func DeleteInTx(user *User, tx Transaction) error
 
 **Plan:**
 
-- ✅ Strip SQLite support (PENDING)
-- ✅ Strip MySQL support (PENDING)
-- ✅ Keep Postgres only
 - Simplify configuration
 - Remove dialect-specific code
 

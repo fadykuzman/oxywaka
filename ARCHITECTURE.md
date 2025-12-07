@@ -6,6 +6,7 @@
 ---
 
 ## Table of Contents
+
 1. [System Architecture Overview](#1-system-architecture-overview)
 2. [Layered Architecture](#2-layered-architecture)
 3. [Heartbeat Data Flow](#3-heartbeat-data-flow-critical-path)
@@ -56,7 +57,7 @@ graph TB
     end
 
     subgraph "Persistence Layer"
-        DB[(Database<br/>SQLite/MySQL/Postgres)]
+        DB[(Database<br/>Postgres)]
     end
 
     subgraph "Cross-Cutting Concerns"
@@ -147,6 +148,7 @@ graph LR
 ```
 
 **Key Principles:**
+
 - **Dependency Direction**: Always flows inward (outer layers depend on inner layers)
 - **Interface-Based**: All services expose interfaces for testability
 - **Repository Pattern**: Data access abstracted through repositories
@@ -205,6 +207,7 @@ sequenceDiagram
 ```
 
 **Key Observations for OxyWaka:**
+
 1. **Category field** is assigned during sanitization (coding vs browsing)
 2. **Event bus** publishes heartbeat events - perfect hook for insights module
 3. **Hash-based deduplication** prevents duplicate entries
@@ -262,6 +265,7 @@ sequenceDiagram
 ```
 
 **Summary Structure:**
+
 - **Summary**: Time range container (from, to, user)
 - **SummaryItems**: Individual aggregations (project: "wakapi" → 3600 seconds)
 - **Types**: Project, Language, Editor, OS, Machine, Category, Branch, Entity
@@ -333,6 +337,7 @@ graph TD
 ```
 
 **Service Initialization Order** (from main.go:179-199):
+
 1. Foundation: MailService, KeyValueService
 2. User layer: ApiKeyService, UserService
 3. Mapping: LanguageMappingService, ProjectLabelService
@@ -479,6 +484,7 @@ erDiagram
 
 **Extension Point for Insights:**
 Add new tables:
+
 - `insight_scores`: Daily productivity scores
 - `activity_patterns`: Deep work sessions, context switches
 - `recommendations`: AI-generated suggestions
@@ -532,11 +538,13 @@ graph TB
 ```
 
 **Background Processing:**
+
 - **Artifex Dispatcher**: Job queue with worker pools
 - **Cron Syntax**: Extended cron format (second minute hour day month weekday)
 - **Parallel Processing**: Multiple workers for summary/duration generation
 
 **Jobs:**
+
 1. **Aggregation** (02:15): Generate daily summaries for all users
 2. **Reports** (Fri 18:00): Email weekly reports to opted-in users
 3. **Leaderboard** (06:00 & 18:00): Recompute public rankings
@@ -585,11 +593,13 @@ sequenceDiagram
 ```
 
 **Authentication Methods:**
+
 1. **API Key** (WakaTime clients): `Authorization: Basic <base64(apiKey)>`
 2. **Session Cookie** (Web UI): Gorilla sessions
 3. **OpenID Connect** (Optional SSO): OAuth2 with OIDC
 
 **Security Features:**
+
 - Password hashing: Argon2id
 - API key storage: Database with unique constraint
 - Rate limiting: Chi middleware (per IP)
@@ -648,12 +658,14 @@ graph TB
 ```
 
 **Compatibility Endpoints:**
+
 - `/compat/wakatime/v1/users/current/heartbeats` → HeartbeatHandler
 - `/compat/wakatime/v1/users/current/summaries` → SummariesHandler
 - `/compat/wakatime/v1/users/current/stats` → StatsHandler
 - `/compat/wakatime/v1/users/current/all_time_since_today` → AllTimeHandler
 
 **Model Conversion:**
+
 - WakaTime JSON format → Wakapi models
 - Located in: `models/compat/wakatime/v1/`
 - Ensures plugins work without modification
@@ -697,15 +709,18 @@ graph TB
 ```
 
 **Event System:**
+
 - **Hub**: Lightweight pub/sub (github.com/leandro-lugaresi/hub)
 - **Events**: `EventHeartbeatCreate` published on every heartbeat
 - **Subscribers**: Listen for events and react asynchronously
 
 **Current Uses:**
+
 1. **Cache management**: Increment user heartbeat counts
 2. **Stats invalidation**: Clear cached project statistics
 
 **OxyWaka Opportunity:**
+
 ```go
 // Future: insights module subscribes to heartbeat events
 sub := eventBus.Subscribe(0, config.EventHeartbeatCreate)
@@ -723,26 +738,31 @@ go func() {
 ## Key Architectural Patterns
 
 ### 1. **Repository Pattern**
+
 - Abstracts database operations
 - All queries go through repositories
 - Enables easy database switching
 
 ### 2. **Service Layer Pattern**
+
 - Business logic isolated in services
 - Interface-based for testability
 - Constructor injection of dependencies
 
 ### 3. **Dependency Injection**
+
 - Manual DI (no framework)
 - All dependencies injected via constructors
 - Main.go orchestrates initialization
 
 ### 4. **Event-Driven Communication**
+
 - Loose coupling between components
 - Pub/sub pattern via Hub
 - Async processing
 
 ### 5. **Interface Segregation**
+
 - Each service defines its interface
 - Mock implementations for testing
 - Clear contracts between layers
@@ -752,6 +772,7 @@ go func() {
 ## Extension Points for OxyWaka
 
 ### 1. **Add Insights Service**
+
 ```go
 // services/insights.go
 type InsightsService struct {
@@ -769,6 +790,7 @@ func (s *InsightsService) ComputeDailyScore(user *User, date time.Time) float64 
 ```
 
 ### 2. **Subscribe to Heartbeat Events**
+
 ```go
 // Real-time insights on every heartbeat
 sub := eventBus.Subscribe(0, config.EventHeartbeatCreate)
@@ -781,6 +803,7 @@ go func() {
 ```
 
 ### 3. **Add Insights API Routes**
+
 ```go
 // routes/api/insights.go
 func (h *InsightsHandler) GetDailyScore(w http.ResponseWriter, r *http.Request) {
@@ -791,6 +814,7 @@ func (h *InsightsHandler) GetDailyScore(w http.ResponseWriter, r *http.Request) 
 ```
 
 ### 4. **Extend Database Schema**
+
 ```sql
 CREATE TABLE insight_scores (
     id INTEGER PRIMARY KEY,
@@ -808,23 +832,27 @@ CREATE TABLE insight_scores (
 ## Performance Considerations
 
 ### 1. **Caching Strategy**
+
 - In-memory cache (patrickmn/go-cache)
 - User heartbeat counts cached (24h TTL)
 - Project stats cached, invalidated on new heartbeats
 - Summary totals cached per user
 
 ### 2. **Database Optimizations**
+
 - Indexed queries (user_id + time)
 - Batch inserts for heartbeats
 - Pre-computed summaries (avoid real-time aggregation)
 - Streaming queries for large datasets
 
 ### 3. **Background Processing**
+
 - Job queues prevent API blocking
 - Worker pools for parallel processing
 - Scheduled batch jobs (not real-time)
 
 ### 4. **Query Patterns**
+
 - Use durations table for session queries (not raw heartbeats)
 - Use summaries table for dashboard stats (not real-time aggregation)
 - Stream heartbeats for large date ranges (not in-memory)
@@ -833,17 +861,17 @@ CREATE TABLE insight_scores (
 
 ## Critical Files for Understanding
 
-| File | Purpose | Lines | Key Concepts |
-|------|---------|-------|--------------|
-| `main.go` | Initialization & DI | 500 | Service wiring, startup |
-| `models/heartbeat.go` | Core data model | 177 | Heartbeat structure |
-| `services/heartbeat.go` | Heartbeat logic | 400+ | Insert, dedupe, events |
-| `services/summary.go` | Aggregation logic | 400+ | Summary generation |
-| `services/aggregation.go` | Batch processing | 300+ | Daily jobs |
-| `repositories/heartbeat.go` | Data access | 400+ | GORM queries |
-| `routes/api/heartbeat.go` | API endpoint | 200+ | HTTP handling |
-| `config/config.go` | Configuration | 500+ | Settings management |
-| `migrations/migrations.go` | Schema management | 137 | Database evolution |
+| File                        | Purpose             | Lines | Key Concepts            |
+| --------------------------- | ------------------- | ----- | ----------------------- |
+| `main.go`                   | Initialization & DI | 500   | Service wiring, startup |
+| `models/heartbeat.go`       | Core data model     | 177   | Heartbeat structure     |
+| `services/heartbeat.go`     | Heartbeat logic     | 400+  | Insert, dedupe, events  |
+| `services/summary.go`       | Aggregation logic   | 400+  | Summary generation      |
+| `services/aggregation.go`   | Batch processing    | 300+  | Daily jobs              |
+| `repositories/heartbeat.go` | Data access         | 400+  | GORM queries            |
+| `routes/api/heartbeat.go`   | API endpoint        | 200+  | HTTP handling           |
+| `config/config.go`          | Configuration       | 500+  | Settings management     |
+| `migrations/migrations.go`  | Schema management   | 137   | Database evolution      |
 
 ---
 
