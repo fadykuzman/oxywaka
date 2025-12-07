@@ -150,7 +150,7 @@ type dbConfig struct {
 	Name                    string `default:"wakapi_db.db" env:"WAKAPI_DB_NAME"`
 	Dialect                 string `yaml:"-"`
 	Charset                 string `default:"utf8mb4" env:"WAKAPI_DB_CHARSET"`
-	Type                    string `yaml:"dialect" default:"sqlite3" env:"WAKAPI_DB_TYPE"`
+	Type                    string `yaml:"dialect" default:"postgres" env:"WAKAPI_DB_TYPE"`
 	DSN                     string `yaml:"DSN" default:"" env:"WAKAPI_DB_DSN"`
 	MaxConn                 uint   `yaml:"max_conn" default:"10" env:"WAKAPI_DB_MAX_CONNECTIONS"`
 	Ssl                     bool   `default:"false" env:"WAKAPI_DB_SSL"`
