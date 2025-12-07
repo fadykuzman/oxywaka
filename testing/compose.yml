@@ -1,9 +1,0 @@
-services:
-  postgres:
-    image: postgres:17
-    environment:
-      POSTGRES_USER: "wakapi"
-      POSTGRES_PASSWORD: "wakapi"
-      POSTGRES_DB: "wakapi"
-      PGPORT: 55432
-    network_mode: host
