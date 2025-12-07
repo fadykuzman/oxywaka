@@ -94,12 +94,9 @@ func (r *KeyValueRepository) DeleteWildcardTx(pattern string, tx *gorm.DB) error
 
 // ReplaceKeySuffix will search for key-value pairs whose key ends with suffixOld and replace it with suffixNew instead.
 func (r *KeyValueRepository) ReplaceKeySuffix(suffixOld, suffixNew string) error {
-	if dialector := r.db.Dialector.Name(); dialector == "mysql" || dialector == "postgres" {
+	if dialector := r.db.Name(); dialector == "postgres" {
 		patternOld := fmt.Sprintf("(.+)%s$", suffixOld)
-		patternNew := fmt.Sprintf("$1%s", suffixNew) // mysql group replace style
-		if dialector == "postgres" {
-			patternNew = fmt.Sprintf("\\1%s", suffixNew) // postgres group replace style
-		}
+		patternNew := fmt.Sprintf("\\1%s", suffixNew)
 
 		return r.db.Model(&models.KeyStringValue{}).
 			Where(utils.QuoteSql(r.db, "%s like ?", "key"), "%"+suffixOld).

@@ -23,7 +23,7 @@ app:
   aggregation_time: '0 15 2 * * *'                          # time at which to run daily aggregation batch jobs
   report_time_weekly: '0 0 18 * * 5'                        # time at which to fan out weekly reports (extended cron)
   data_cleanup_time: '0 0 6 * * 0'                          # time at which to run old data cleanup (if enabled through data_retention_months)
-  optimize_database_time: '0 0 8 1 * *'                     # time at which to run database vacuuming (sqlite, postgres) or table optimization (mysql)
+  optimize_database_time: '0 0 8 1 * *'                     # time at which to run database vacuuming postgres
   inactive_days: 7                                          # time of previous days within a user must have logged in to be considered active
   import_enabled: true                                      # whether data import from wakatime or other wakapi instances is allowed
   import_backoff_min: 5                                     # time (in minutes) for "cooldown" before allowing another data import attempt by a user
@@ -68,17 +68,15 @@ app:
   datetime_format: Mon, 02 Jan 2006 15:04
 
 db:
-  host:                               # leave blank when using sqlite3
-  port:                               # leave blank when using sqlite3
-  socket:                             # alternative to db.host (leave blank when using sqlite3)
-  user:                               # leave blank when using sqlite3
-  password:                           # leave blank when using sqlite3
-  name: wakapi_db.db                  # database name for mysql / postgres or file path for sqlite (e.g. /tmp/wakapi.db)
-  dialect: sqlite3                    # mysql, postgres, sqlite3
-  charset: utf8mb4                    # only used for mysql connections
+  host:
+  port:
+  socket:
+  user:
+  password:
+  name: wakapi_db.db                  # database name for postgres
+  dialect: postgres                   # only postgres is supported
   max_conn: 10                        # maximum number of concurrent connections to maintain
-  ssl: false                          # whether to use tls for db connection (must be true for cockroachdb) (ignored for mysql and sqlite)
-  compress: false                     # whether to use compression during transport (mysql only)
+  ssl: false                          # whether to use tls for db connection
   automigrate_fail_silently: false    # whether to ignore schema auto-migration failures when starting up
 
 security:

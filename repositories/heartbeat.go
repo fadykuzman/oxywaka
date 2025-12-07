@@ -278,9 +278,7 @@ func (r *HeartbeatRepository) GetUserProjectStats(user *models.User, from, to ti
 	// TODO: refactor this to use summaries once we implemented persisting filtered, multi-interval summaries
 	// see https://github.com/muety/wakapi/issues/524#issuecomment-1731668391
 
-	// multi-line string with backticks yields an error with the github.com/glebarez/sqlite driver
-
-	args := []interface{}{
+	args := []any{
 		sql.Named("userid", user.ID),
 		sql.Named("from", from.Format(time.RFC3339)),
 		sql.Named("to", to.Format(time.RFC3339)),

@@ -3,18 +3,14 @@ package models
 import (
 	"database/sql/driver"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/glebarez/sqlite"
 	"github.com/muety/wakapi/config"
 	"github.com/muety/wakapi/utils"
-	"gorm.io/driver/postgres"
 
-	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 )
@@ -52,19 +48,7 @@ type CustomTime time.Time
 func (j CustomTime) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 	t := "timestamp"
 
-	// sql server doesn't allow multiple columns with timestamp type in a column
-	// So we need to change the type to datetimeoffset
-	if db.Config.Dialector.Name() == (sqlserver.Dialector{}).Name() {
-		t = "datetimeoffset"
-	} else if db.Config.Dialector.Name() == (postgres.Dialector{}).Name() {
-		// TODO: migrate to timestamptz, see https://github.com/muety/wakapi/issues/771
-	}
-
-	if db.Dialector.Name() != (sqlite.Dialector{}).Name() { // https://github.com/glebarez/go-sqlite/issues/186
-		if scale, ok := field.TagSettings["TIMESCALE"]; ok {
-			t += fmt.Sprintf("(%s)", scale)
-		}
-	}
+	// TODO: migrate to timestamptz, see https://github.com/muety/wakapi/issues/771
 
 	return t
 }
@@ -84,28 +68,10 @@ func (j *CustomTime) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (j *CustomTime) Scan(value interface{}) error {
-	var (
-		t   time.Time
-		err error
-	)
-
-	switch value.(type) {
-	case string:
-		// this is only for safety / backwards compatibility, because, the driver itself should already properly parse dates
-		// however, that's not always guaranteed, e.g. see https://github.com/glebarez/go-sqlite/issues/186
-		t, err = time.Parse("2006-01-02 15:04:05-07:00", value.(string)) // string format used by glebarez/sqlite driver
-		if err != nil {
-			t, err = time.Parse(time.RFC3339, value.(string)) // iso format used by ncruces/go-sqlite3 driver and others
-		}
-		if err != nil {
-			return errors.New(fmt.Sprintf("unsupported date time format: %s", value))
-		}
-	case time.Time:
-		t = value.(time.Time)
-		break
-	default:
-		return errors.New(fmt.Sprintf("unsupported type: %T", value))
+func (j *CustomTime) Scan(value any) error {
+	t, ok := value.(time.Time)
+	if !ok {
+		return fmt.Errorf("unsupported type: %T", value)
 	}
 
 	// see https://github.com/muety/wakapi/issues/771

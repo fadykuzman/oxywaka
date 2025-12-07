@@ -18,22 +18,16 @@ func init() {
 
 			slog.Info("this may take a while!")
 
-			if cfg.Db.IsPostgres() {
-				// postgres does not have unsigned data types
-				// https://www.postgresql.org/docs/10/datatype-numeric.html
-				tx := db.Begin()
-				if err := tx.Exec("ALTER TABLE heartbeats ALTER COLUMN id TYPE BIGINT").Error; err != nil {
-					return err
-				}
-				if err := tx.Exec("ALTER TABLE summary_items ALTER COLUMN id TYPE BIGINT").Error; err != nil {
-					return err
-				}
-				tx.Commit()
-			} else {
-				// sqlite doesn't allow for changing column type easily
-				// https://stackoverflow.com/a/2083562/3112139
-				slog.Warn("unable to migrate id columns to bigint", "dialect", cfg.Db.Dialect)
+			// postgres does not have unsigned data types
+			// https://www.postgresql.org/docs/10/datatype-numeric.html
+			tx := db.Begin()
+			if err := tx.Exec("ALTER TABLE heartbeats ALTER COLUMN id TYPE BIGINT").Error; err != nil {
+				return err
 			}
+			if err := tx.Exec("ALTER TABLE summary_items ALTER COLUMN id TYPE BIGINT").Error; err != nil {
+				return err
+			}
+			tx.Commit()
 
 			setHasRun(name, db)
 			return nil

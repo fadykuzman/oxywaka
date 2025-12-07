@@ -7,7 +7,6 @@ INSERT INTO "key_string_values" ("key","value") VALUES ('20210806-remove_persist
 INSERT INTO "key_string_values" ("key","value") VALUES ('20211215-migrate_id_to_bigint-add_has_data_field','done');
 INSERT INTO "key_string_values" ("key","value") VALUES ('20212212-total_summary_heartbeats','done');
 INSERT INTO "key_string_values" ("key","value") VALUES ('20220317-align_num_heartbeats','done');
-INSERT INTO "key_string_values" ("key","value") VALUES ('20220318-mysql_timestamp_precision','done');
 INSERT INTO "key_string_values" ("key","value") VALUES ('202203191-drop_diagnostics_user','done');
 COMMIT;
 

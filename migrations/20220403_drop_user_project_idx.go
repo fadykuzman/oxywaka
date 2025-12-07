@@ -14,7 +14,6 @@ import (
 
 func init() {
 	const name = "20220403-drop_user_project_idx"
-	const idxName = "idx_user_project"
 
 	f := migrationFunc{
 		name: name,
