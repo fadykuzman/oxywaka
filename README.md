@@ -203,8 +203,8 @@ You can specify configuration options either via a config file (default: `config
 | `db.port` /<br> `WAKAPI_DB_PORT`                                                            | -                                                | Database port                                                                                                                                                                   |
 | `db.user` /<br> `WAKAPI_DB_USER`                                                            | -                                                | Database user                                                                                                                                                                   |
 | `db.password` /<br> `WAKAPI_DB_PASSWORD`                                                    | -                                                | Database password                                                                                                                                                               |
-| `db.name` /<br> `WAKAPI_DB_NAME`                                                            | `wakapi_db.db`                                   | Database name                                                                                                                                                                   |
-| `db.dialect` /<br> `WAKAPI_DB_TYPE`                                                         | `postgres`                                       | Database type                                                                                                                                                                   |
+| `db.name` /<br> `WAKAPI_DB_NAME`                                                            | `wakapi`                                         | Database name                                                                                                                                                                   |
+| `db.dialect` /<br> `WAKAPI_DB_TYPE`                                                         | `postgres`                                       | Database type (only `postgres` is supported)                                                                                                                                    |
 | `db.max_conn` /<br> `WAKAPI_DB_MAX_CONNECTIONS`                                             | `2`                                              | Maximum number of database connections                                                                                                                                          |
 | `db.ssl` /<br> `WAKAPI_DB_SSL`                                                              | `false`                                          | Whether to use TLS encryption for database connection (Postgres only)                                                                                                           |
 | `db.automgirate_fail_silently` /<br> `WAKAPI_DB_AUTOMIGRATE_FAIL_SILENTLY`                  | `false`                                          | Whether to ignore schema auto-migration failures when starting up                                                                                                               |
@@ -228,9 +228,9 @@ You can specify configuration options either via a config file (default: `config
 
 ### Supported databases
 
-Wakapi uses [GORM](https://gorm.io) as an ORM. Only Postgres is supported
+Wakapi uses [GORM](https://gorm.io) as an ORM. **Only PostgreSQL is supported.**
 
-- [Postgres](https://hub.docker.com/_/postgres) (_open-source as well_)
+- [PostgreSQL](https://hub.docker.com/_/postgres) 12+ (recommended: PostgreSQL 16+)
 
 ## 🔐 Authentication
 

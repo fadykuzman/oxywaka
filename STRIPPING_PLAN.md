@@ -84,12 +84,12 @@
 - ✅ KEEP: Docker, Docker Compose, API tests (Bruno)
 
 ### Database Support
-- ❌ SQLite support (code, config, migrations)
-- ❌ MySQL support (code, config, migrations)
-- ❌ MariaDB support (code, config, migrations)
-- ❌ Database charset config (MySQL-specific)
-- ❌ Database socket config (MySQL-specific)
-- ❌ All GORM code
+- ✅ SQLite support removed (drivers, most compatibility code)
+- ✅ MySQL support removed (drivers, most compatibility code)
+- ✅ MariaDB support removed (drivers, most compatibility code)
+- ✅ CockroachDB support removed (config, db_opts.go)
+- ⚠️ Keep GORM (pragmatic decision for faster shipping)
+- 🔧 Remaining cleanup: models/shared.go SQLite string parsing, config dialect handling
 
 ### Frontend Assets
 - ❌ All `.br` (Brotli) files
@@ -125,15 +125,14 @@
 5. ✅ Clean up `package.json` (remove compression commands)
 6. ✅ Update README (remove K8s, GitPod, multi-DB instructions)
 
-### Phase 2: Database Migration (High Risk - Careful!)
-1. ✅ Set up `sqlc` configuration
-2. ✅ Write raw SQL schema (from current GORM models)
-3. ✅ Write SQL queries for all operations
-4. ✅ Generate type-safe Go code with `sqlc`
-5. ✅ Replace GORM repositories with `sqlc`-generated code
-6. ✅ Remove SQLite/MySQL migration files
-7. ✅ Keep only Postgres migrations
-8. ✅ Update config to remove multi-DB options
+### Phase 2: Database Simplification (UPDATED - Keeping GORM)
+1. ✅ Remove SQLite/MySQL/MariaDB drivers from go.mod
+2. ✅ Remove CockroachDB-specific code (db_opts.go)
+3. 🔧 IN PROGRESS: Clean up models/shared.go SQLite compatibility
+4. 🔧 IN PROGRESS: Update config.go to remove multi-DB dialect handling
+5. 🔧 TODO: Simplify migrations (remove dialect conditionals)
+6. 🔧 TODO: Update main.go (remove db_opts usage)
+7. ✅ Keep GORM for now (migrate to sqlc later if needed)
 
 ### Phase 3: Web Framework Migration (Medium Risk)
 1. ✅ Audit current routes and middleware
@@ -329,5 +328,12 @@
 
 ---
 
-**Status:** Planning complete, ready to execute
-**Next:** Start Phase 1 (file cleanup)
+**Status:** ~70% complete - Database layer simplified to Postgres-only with GORM
+**Next Steps:**
+1. Remove SQLite compatibility from models/shared.go
+2. Simplify config/config.go dialect handling
+3. Clean up main.go (remove db_opts)
+4. Update migrations to remove dialect conditionals
+5. Update documentation
+
+**Last Updated:** 2025-12-07

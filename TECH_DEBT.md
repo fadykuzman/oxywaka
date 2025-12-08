@@ -162,21 +162,29 @@ func DeleteInTx(user *User, tx Transaction) error
 
 ### 5. Multi-Database Support (SQLite/MySQL/Postgres)
 
-**Location:** `config/config.go`, migrations, repository queries
+**Location:** `config/config.go`, `models/shared.go`, migrations
 
 **Issue:**
 
-- Maintains compatibility with 3 databases
-- Adds complexity (dialect-specific code)
-- More testing surface area
-- Portfolio bloat
+- ~~Maintains compatibility with 3 databases~~ **MOSTLY RESOLVED**
+- ~~Adds complexity (dialect-specific code)~~ **IN PROGRESS**
+- ~~More testing surface area~~
+- ~~Portfolio bloat~~
 
-**Plan:**
+**Status:** 🔧 **70% COMPLETE**
 
-- Simplify configuration
-- Remove dialect-specific code
+**Done:**
+- ✅ Removed SQLite, MySQL, MariaDB drivers
+- ✅ Removed CockroachDB support (db_opts.go)
+- ✅ Git shows active cleanup in repositories/key_value.go, services/duration.go
 
-**Priority:** 🟡 **MEDIUM** (part of stripping plan)
+**Remaining:**
+- 🔧 `models/shared.go:78-88` - SQLite string date parsing
+- 🔧 `config/config.go` - Multi-dialect configuration handling
+- 🔧 `main.go:140` - Remove GetWakapiDBOpts usage
+- 🔧 Migrations - Remove dialect conditionals
+
+**Priority:** 🟡 **MEDIUM** (actively being worked on)
 
 ---
 
@@ -187,4 +195,4 @@ func DeleteInTx(user *User, tx Transaction) error
 - Mark items as resolved when addressed
 - Link to relevant GitHub issues when created
 
-**Last Updated:** 2025-12-04
+**Last Updated:** 2025-12-07
